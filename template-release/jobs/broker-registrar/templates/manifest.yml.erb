@@ -1,0 +1,11 @@
+---
+applications:
+- name: <%=p("broker.name")%>
+  memory: 512M
+  instances: 1
+  path: /var/vcap/packages/broker/broker.jar
+  buildpack: <%=p("broker.buildpack")%>
+  env:
+    <%p("broker.env").each do |key, value|%>
+    <%=key%>: <%=value%>
+    <%end%>

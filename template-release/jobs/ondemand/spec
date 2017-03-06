@@ -1,0 +1,9 @@
+---
+name: ondemand
+
+templates: 
+  config.yml.erb: config/config.yml
+  pre-start.sh.erb: bin/pre-start
+packages: []
+
+properties: {}

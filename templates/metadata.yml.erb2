@@ -1,0 +1,566 @@
+---
+job_types: 
+- description: broker
+  dynamic_ip: 1
+  static_ip: 0
+  instance_definition:
+    configurable: true
+    constraints:
+      min: 0
+    default: 1
+    label: Instances
+    name: instances
+    type: integer
+  label: broker
+  manifest: |
+    startup_banner: true
+    port: 8080
+    username: (( .properties.broker_basic_auth.identity ))
+    password: (( .properties.broker_basic_auth.password ))
+    disable_ssl_cert_verification: (( ..cf.ha_proxy.skip_cert_verify.value ))
+    bosh:
+      url: https://(( $director.deployment_ip )):25555
+      root_ca_cert: (( $director.ca_public_key ))
+      authentication:
+        uaa:
+          url: https://(( $director.deployment_ip )):8443
+          client_id: (( $self.uaa_client_name ))
+          client_secret: (( $self.uaa_client_secret ))
+    cf:
+      url: https://api.(( ..cf.cloud_controller.system_domain.value ))
+      authentication:
+        url: https://uaa.(( ..cf.cloud_controller.system_domain.value ))
+        user_credentials:
+          username: (( ..cf.uaa.system_services_credentials.identity ))
+          password: (( ..cf.uaa.system_services_credentials.password ))
+    service_adapter:
+        path: <%=pi("predefined_job","broker")["manifest"]["service_adapter.path"]%>
+    service_deployment:
+      releases: <%=pi("predefined_job","broker")["manifest"]["service_deployment.releases"]%>
+      stemcell:
+        os: ubuntu-trusty
+        version: latest
+    service_catalog:
+      id: <%=pi("predefined_job","broker")["manifest"]["service_catalog.id"]%>
+      service_name: <%=pi("predefined_job","broker")["manifest"]["service_catalog.service_name"]%>
+      service_description: <%=pi("predefined_job","broker")["manifest"]["service_catalog.service_description"]%>
+      bindable: true
+      plan_updatable: true
+      plans: <%pi("predefined_job","broker")["service_catalog.plans"].each do|plan|%>
+      - name: <%=plan["plan_name"]%>
+        plan_id: <%=plan["plan_id"]%>
+        description: <%=plan["description"]%>
+        instance_groups:
+        <%plan["instance_groups"].each do|group|%>    
+        - name: <%=group["name"]%>
+          vm_type: <%=group["vm_type"]%>
+          vm_extensions: <%=group["vm_type"]%>
+          instances: <%=group["instances"]%>
+          persistent_disk: <%=group["persistent_disk"]%>
+          networks: <%=group["networks"]%>
+          azs: <%=groups["azs"]%>
+        <%end%>
+        properties:
+          auto_create_topics: 2
+          default_replication_factor: 2
+<%end%>
+    startup_banner: true
+  max_in_flight: 1
+  name: broker
+  resource_definitions:
+  - configurable: true
+    constraints:
+      min: 1024
+    default: 1024
+    label: RAM
+    name: ram
+    type: integer
+  - configurable: true
+    constraints:
+      min: 2048
+    default: 2048
+    label: Ephemeral Disk
+    name: ephemeral_disk
+    type: integer
+  - configurable: false
+    default: 0
+    label: Persistent Disk
+    name: persistent_disk
+    type: integer
+  - configurable: true
+    constraints:
+      min: 1
+      power_of_two: true
+    default: 1
+    label: CPU
+    name: cpu
+    type: integer
+  resource_label: broker
+  single_az_only: false
+  templates:
+  - name: broker
+    release: on-demand-service-broker
+- description: delete-sub-deployments
+  dynamic_ip: 1
+  static_ip: 0
+  instance_definition:
+    configurable: true
+    constraints:
+      min: 0
+    default: 1
+    label: Instances
+    name: instances
+    type: integer
+  label: delete-sub-deployments
+  manifest: |
+    timeout_minutes: 30
+    disable_ssl_cert_verification: (( ..cf.ha_proxy.skip_cert_verify.value ))
+    cf:
+      api_url: https://api.(( ..cf.cloud_controller.system_domain.value ))
+      admin_username: "(( ..cf.uaa.admin_credentials.identity ))"
+      admin_password: "(( ..cf.uaa.admin_credentials.password ))"
+  max_in_flight: 1
+  name: delete-sub-deployments
+  resource_definitions:
+  - configurable: true
+    constraints:
+      min: 1024
+    default: 1024
+    label: RAM
+    name: ram
+    type: integer
+  - configurable: true
+    constraints:
+      min: 2048
+    default: 2048
+    label: Ephemeral Disk
+    name: ephemeral_disk
+    type: integer
+  - configurable: false
+    default: 0
+    label: Persistent Disk
+    name: persistent_disk
+    type: integer
+  - configurable: true
+    constraints:
+      min: 1
+      power_of_two: true
+    default: 1
+    label: CPU
+    name: cpu
+    type: integer
+  resource_label: delete-sub-deployments
+  single_az_only: false
+  templates:
+  - name: delete-sub-deployments
+    release: on-demand-service-broker
+- description: deregister-broker
+  dynamic_ip: 1
+  static_ip: 0
+  instance_definition:
+    configurable: true
+    constraints:
+      min: 0
+    default: 1
+    label: Instances
+    name: instances
+    type: integer
+  label: deregister-broker
+  manifest: |
+    broker_name: BROKER_TOCHANGE
+    disable_ssl_cert_verification: (( ..cf.ha_proxy.skip_cert_verify.value ))
+    cf:
+      api_url: https://api.(( ..cf.cloud_controller.system_domain.value ))
+      admin_username: "(( ..cf.uaa.admin_credentials.identity ))"
+      admin_password: "(( ..cf.uaa.admin_credentials.password ))"
+  max_in_flight: 1
+  name: deregister-broker
+  resource_definitions:
+  - configurable: true
+    constraints:
+      min: 1024
+    default: 1024
+    label: RAM
+    name: ram
+    type: integer
+  - configurable: true
+    constraints:
+      min: 2048
+    default: 2048
+    label: Ephemeral Disk
+    name: ephemeral_disk
+    type: integer
+  - configurable: false
+    default: 0
+    label: Persistent Disk
+    name: persistent_disk
+    type: integer
+  - configurable: true
+    constraints:
+      min: 1
+      power_of_two: true
+    default: 1
+    label: CPU
+    name: cpu
+    type: integer
+  resource_label: deregister-broker
+  single_az_only: false
+  templates:
+  - name: deregister-broker
+    release: on-demand-service-broker
+- description: register-broker
+  dynamic_ip: 1
+  static_ip: 0
+  instance_definition:
+    configurable: true
+    constraints:
+      min: 0
+    default: 1
+    label: Instances
+    name: instances
+    type: integer
+  label: register-broker
+  manifest: |
+    broker_name: "(( broker_name.value ))"
+    broker_uri: "(( broker_uri.value ))"
+    disable_ssl_cert_verification: "(( disable_ssl_cert_verification.value ))"
+    cf:
+      api_url: "(( cf_api_url.value ))"
+      admin_username: "(( ..cf.uaa.admin_credentials.identity ))"
+      admin_password: "(( ..cf.uaa.admin_credentials.password ))"
+    enable_service_access: "(( enable_service_access.value ))"
+  max_in_flight: 1
+  name: register-broker
+  property_blueprints:
+  - name: broker_name
+    configurable: true
+    optional: false
+    type: string
+  - name: broker_uri
+    configurable: true
+    optional: false
+    type: string
+  - name: disable_ssl_cert_verification
+    configurable: true
+    optional: false
+    type: boolean
+    default: false
+  - name: cf_api_url
+    configurable: true
+    optional: false
+    type: string
+  - name: enable_service_access
+    configurable: true
+    optional: false
+    type: boolean
+    default: true
+  resource_definitions:
+  - configurable: true
+    constraints:
+      min: 1024
+    default: 1024
+    label: RAM
+    name: ram
+    type: integer
+  - configurable: true
+    constraints:
+      min: 2048
+    default: 2048
+    label: Ephemeral Disk
+    name: ephemeral_disk
+    type: integer
+  - configurable: false
+    default: 0
+    label: Persistent Disk
+    name: persistent_disk
+    type: integer
+  - configurable: true
+    constraints:
+      min: 1
+      power_of_two: true
+    default: 1
+    label: CPU
+    name: cpu
+    type: integer
+  resource_label: register-broker
+  single_az_only: false
+  templates:
+  - name: register-broker
+    release: on-demand-service-broker
+- description: service-metrics-adapter
+  dynamic_ip: 1
+  static_ip: 0
+  instance_definition:
+    configurable: true
+    constraints:
+      min: 0
+    default: 1
+    label: Instances
+    name: instances
+    type: integer
+  label: service-metrics-adapter
+  manifest: |
+    broker_uri: "(( broker_uri.value ))"
+  max_in_flight: 1
+  name: service-metrics-adapter
+  property_blueprints:
+  - name: broker_uri
+    configurable: true
+    optional: false
+    type: string
+  resource_definitions:
+  - configurable: true
+    constraints:
+      min: 1024
+    default: 1024
+    label: RAM
+    name: ram
+    type: integer
+  - configurable: true
+    constraints:
+      min: 2048
+    default: 2048
+    label: Ephemeral Disk
+    name: ephemeral_disk
+    type: integer
+  - configurable: false
+    default: 0
+    label: Persistent Disk
+    name: persistent_disk
+    type: integer
+  - configurable: true
+    constraints:
+      min: 1
+      power_of_two: true
+    default: 1
+    label: CPU
+    name: cpu
+    type: integer
+  resource_label: service-metrics-adapter
+  single_az_only: false
+  templates:
+  - name: service-metrics-adapter
+    release: on-demand-service-broker
+- description: upgrade-sub-deployments
+  dynamic_ip: 1
+  static_ip: 0
+  instance_definition:
+    configurable: true
+    constraints:
+      min: 0
+    default: 1
+    label: Instances
+    name: instances
+    type: integer
+  label: upgrade-sub-deployments
+  manifest: |
+  max_in_flight: 1
+  name: upgrade-sub-deployments
+  property_blueprints:
+  resource_definitions:
+  - configurable: true
+    constraints:
+      min: 1024
+    default: 1024
+    label: RAM
+    name: ram
+    type: integer
+  - configurable: true
+    constraints:
+      min: 2048
+    default: 2048
+    label: Ephemeral Disk
+    name: ephemeral_disk
+    type: integer
+  - configurable: false
+    default: 0
+    label: Persistent Disk
+    name: persistent_disk
+    type: integer
+  - configurable: true
+    constraints:
+      min: 1
+      power_of_two: true
+    default: 1
+    label: CPU
+    name: cpu
+    type: integer
+  resource_label: upgrade-sub-deployments
+  single_az_only: false
+  templates:
+  - name: upgrade-sub-deployments
+    release: on-demand-service-broker
+form_types:
+- description: broker
+  label: broker
+  name: broker
+  property_inputs:
+  - description: Port for the broker
+    label: port
+    reference: .broker.port
+  - description: Broker basic auth username
+    label: username
+    reference: .broker.username
+  - description: Broker basic auth password
+    label: password
+    reference: .broker.password
+  - description: Disable SSL certificate verification. DO NOT USE IN PRODUCTION
+    label: disable_ssl_cert_verification
+    reference: .broker.disable_ssl_cert_verification
+  - description: BOSH URL
+    label: bosh_url
+    reference: .broker.bosh_url
+  - description: Root CA certificate for broker to trust (optional)
+    label: bosh_root_ca_cert
+    reference: .broker.bosh_root_ca_cert
+  - description: BOSH director username
+    label: bosh_authentication.basic.username
+    reference: .broker.bosh_authentication.basic.username
+  - description: BOSH director password
+    label: bosh_authentication.basic.password
+    reference: .broker.bosh_authentication.basic.password
+  - description: UAA URL
+    label: bosh_authentication.uaa.url
+    reference: .broker.bosh_authentication.uaa.url
+  - description: UAA client ID
+    label: bosh_authentication.uaa.client_id
+    reference: .broker.bosh_authentication.uaa.client_id
+  - description: UAA client secret
+    label: bosh_authentication.uaa.client_secret
+    reference: .broker.bosh_authentication.uaa.client_secret
+  - description: CF API URL
+    label: cf_url
+    reference: .broker.cf_url
+  - description: Root CA certificate for broker to trust (optional)
+    label: cf_root_ca_cert
+    reference: .broker.cf_root_ca_cert
+  - description: UAA URL for Cloud Foundry
+    label: cf_authentication.url
+    reference: .broker.cf_authentication.url
+  - description: UAA client ID with cloud_controller.read authority
+    label: cf_authentication.client_credentials.client_id
+    reference: .broker.cf_authentication.client_credentials.client_id
+  - description: UAA client secret
+    label: cf_authentication.client_credentials.secret
+    reference: .broker.cf_authentication.client_credentials.secret
+  - description: CF admin username
+    label: cf_authentication.user_credentials.username
+    reference: .broker.cf_authentication.user_credentials.username
+  - description: CF admin password
+    label: cf_authentication.user_credentials.password
+    reference: .broker.cf_authentication.user_credentials.password
+  - description: the path to the service adapter binary located on the host with the broker
+    label: service_adapter_path
+    reference: .broker.service_adapter_path
+  - description: releases to deploy for each instance
+    label: service_deployment_releases
+    reference: .broker.service_deployment_releases
+  - description: stemcell OS to use for every job in the service deployment
+    label: service_deployment_stemcell.os
+    reference: .broker.service_deployment_stemcell.os
+  - description: stemcell version to use for every job in the service deployment
+    label: service_deployment_stemcell.version
+    reference: .broker.service_deployment_stemcell.version
+  - description: service ID for CF marketplace
+    label: service_catalog_id
+    reference: .broker.service_catalog_id
+  - description: service offering for CF marketplace
+    label: service_catalog_service_name
+    reference: .broker.service_catalog_service_name
+  - description: service description for CF marketplace
+    label: service_catalog_service_description
+    reference: .broker.service_catalog_service_description
+  - description: is service bindable?
+    label: service_catalog_bindable
+    reference: .broker.service_catalog_bindable
+  - description: are plan migrations allowed?
+    label: service_catalog_plan_updatable
+    reference: .broker.service_catalog_plan_updatable
+  - description: apps manager display name
+    label: service_catalog_metadata.display_name
+    reference: .broker.service_catalog_metadata.display_name
+  - description: apps manager image url
+    label: service_catalog_metadata.image_url
+    reference: .broker.service_catalog_metadata.image_url
+  - description: apps manager long description
+    label: service_catalog_metadata.long_description
+    reference: .broker.service_catalog_metadata.long_description
+  - description: apps manager provider display name
+    label: service_catalog_metadata.provider_display_name
+    reference: .broker.service_catalog_metadata.provider_display_name
+  - description: apps manager documentation url
+    label: service_catalog_metadata.documentation_url
+    reference: .broker.service_catalog_metadata.documentation_url
+  - description: apps manager support url
+    label: service_catalog_metadata.support_url
+    reference: .broker.service_catalog_metadata.support_url
+  - description: client ID for dashboard
+    label: service_catalog_dashboard_client
+    reference: .broker.service_catalog_dashboard_client
+  - description: string array of permissions required by broker
+    label: service_catalog_requires
+    reference: .broker.service_catalog_requires
+  - description: string array of tags for catalog
+    label: service_catalog_tags
+    reference: .broker.service_catalog_tags
+  - description: properties applied to every plan. if in conflict, plan properties take precedence
+    label: service_catalog_global_properties
+    reference: .broker.service_catalog_global_properties
+  - description: the service plans to be presented to Cloud Foundry
+    label: service_catalog_plans
+    reference: .broker.service_catalog_plans
+  - description: startup_banner
+    label: startup_banner
+    reference: .broker.startup_banner
+- description: delete-sub-deployments
+  label: delete-sub-deployments
+  name: delete-sub-deployments
+  property_inputs:
+  - description: timeout to wait for subdeployments to be deleted
+    label: timeout_minutes
+    reference: .delete-sub-deployments.timeout_minutes
+  - description: disable TLS certificate verification
+    label: disable_ssl_cert_verification
+    reference: .delete-sub-deployments.disable_ssl_cert_verification
+  - description: CF API URL
+    label: cf_api_url
+    reference: .delete-sub-deployments.cf_api_url
+- description: deregister-broker
+  label: deregister-broker
+  name: deregister-broker
+  property_inputs:
+  - description: name of broker to register with cloud controller
+    label: broker_name
+    reference: .deregister-broker.broker_name
+  - description: disable TLS certificate verification
+    label: disable_ssl_cert_verification
+    reference: .deregister-broker.disable_ssl_cert_verification
+  - description: CF API URL
+    label: cf_api_url
+    reference: .deregister-broker.cf_api_url
+- description: register-broker
+  label: register-broker
+  name: register-broker
+  property_inputs:
+  - description: name of broker to register with cloud controller
+    label: broker_name
+    reference: .register-broker.broker_name
+  - description: URI of broker, if a route has been registered (optional)
+    label: broker_uri
+    reference: .register-broker.broker_uri
+  - description: disable TLS certificate verification
+    label: disable_ssl_cert_verification
+    reference: .register-broker.disable_ssl_cert_verification
+  - description: Cloud Foundry API URL
+    label: cf_api_url
+    reference: .register-broker.cf_api_url
+  - description: Enable service access to the listed service plans
+    label: enable_service_access
+    reference: .register-broker.enable_service_access
+- description: service-metrics-adapter
+  label: service-metrics-adapter
+  name: service-metrics-adapter
+  property_inputs:
+  - description: URI of broker, if a route has been registered (optional)
+    label: broker_uri
+    reference: .service-metrics-adapter.broker_uri

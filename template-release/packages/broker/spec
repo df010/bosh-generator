@@ -1,0 +1,9 @@
+---
+name: broker
+
+dependencies: []
+
+files:
+- broker/cloudfoundry-service-broker.jar 
+- broker/cf.zip
+- broker/jq

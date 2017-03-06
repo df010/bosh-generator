@@ -1,0 +1,392 @@
+---
+job_types: 
+- description: broker
+  dynamic_ip: 1
+  static_ip: 0
+  instance_definition:
+    configurable: true
+    constraints:
+      min: 0
+    default: 1
+    label: Instances
+    name: instances
+    type: integer
+  label: broker
+  manifest: |
+    startup_banner: true
+    port: 8080
+    username: (( broker_basic_auth.identity ))
+    password: (( broker_basic_auth.password ))
+    disable_ssl_cert_verification: (( ..cf.ha_proxy.skip_cert_verify.value ))
+    bosh:
+      url: https://(( $director.deployment_ip )):25555
+      root_ca_cert: (( $director.ca_public_key ))
+      authentication:
+        uaa:
+          url: https://(( $director.deployment_ip )):8443
+          client_id: (( $self.uaa_client_name ))
+          client_secret: (( $self.uaa_client_secret ))
+    cf:
+      url: https://api.(( ..cf.cloud_controller.system_domain.value ))
+      authentication:
+        url: https://uaa.(( ..cf.cloud_controller.system_domain.value ))
+        user_credentials:
+          username: (( ..cf.uaa.system_services_credentials.identity ))
+          password: (( ..cf.uaa.system_services_credentials.password ))
+    <%=o("ondemand_job_types","broker")['manifest']%>
+    service_adapter:
+        path: <%=o("ondemand_job_types","broker")["manifest"]["service_adapter.path"]%>
+    service_deployment:
+      releases: <%o("ondemand_job_types","broker")["manifest"]["service_deployment.releases"].each do |release|%>
+      - name: <%=release["name"]%>
+        version: <%=release["version"]%>
+        jobs: <%=release["jobs"]%>
+      <%end%> 
+      stemcell:
+        os: ubuntu-trusty
+        version: latest
+    service_catalog:
+      id: <%=o("ondemand_job_types","broker")["manifest"]["service_catalog.id"]%>
+      service_name: <%=o("ondemand_job_types","broker")["manifest"]["service_catalog.service_name"]%>
+      service_description: <%=o("ondemand_job_types","broker")["manifest"]["service_catalog.service_description"]%>
+      bindable: true
+      plan_updatable: true
+      plans: <%o("ondemand_job_types","broker")["manifest"]["service_catalog.plans"].each do|plan|%>
+      - name: <%=plan["plan_name"]%>
+        plan_id: <%=plan["plan_id"]%>
+        description: <%=plan["description"]%>
+        instance_groups:
+        <%plan["instance_groups"].each do|group|%>    
+        - name: <%=group["name"]%>
+          vm_type: (( <%=group["name"]%>_vm_type.value ))
+          vm_extensions: []
+          instances: <%=group["instances"]%>
+          persistent_disk: <%=group["persistent_disk"]%>
+          networks: [(( $self.service_network ))]
+          azs: (( service_az_multi_select.value ))
+          properties:
+              <%=o("ojob_types",group["name"])["properties"]%>  
+        <%end%>
+      <%end%>
+    startup_banner: true
+  max_in_flight: 1
+  name: broker
+  resource_definitions:
+  - configurable: true
+    constraints:
+      min: 1024
+    default: 1024
+    label: RAM
+    name: ram
+    type: integer
+  - configurable: true
+    constraints:
+      min: 2048
+    default: 2048
+    label: Ephemeral Disk
+    name: ephemeral_disk
+    type: integer
+  - configurable: false
+    default: 0
+    label: Persistent Disk
+    name: persistent_disk
+    type: integer
+  - configurable: true
+    constraints:
+      min: 1
+      power_of_two: true
+    default: 1
+    label: CPU
+    name: cpu
+    type: integer
+  resource_label: broker
+  single_az_only: false
+  templates:
+  - name: broker
+    release: on-demand-service-broker
+  property_blueprints:
+  - name: broker_basic_auth
+    type: simple_credentials
+  <%o("ondemand_job_types","broker")["instance_groups"].each do|group|%>
+  - name: <%=group["name"]%>_vm_type
+    type: vm_type_dropdown
+    configurable: true
+    optional: false
+  <%end%>
+  - name: service_az_multi_select 
+    type: service_network_az_multi_select
+    configurable: true
+    optional: false
+- description: delete-sub-deployments
+  dynamic_ip: 1
+  static_ip: 0
+  instance_definition:
+    configurable: true
+    constraints:
+      min: 0
+    default: 1
+    label: Instances
+    name: instances
+    type: integer
+  label: delete-sub-deployments
+  manifest: |
+    timeout_minutes: 30
+    disable_ssl_cert_verification: (( ..cf.ha_proxy.skip_cert_verify.value ))
+    cf:
+      api_url: https://api.(( ..cf.cloud_controller.system_domain.value ))
+      admin_username: "(( ..cf.uaa.admin_credentials.identity ))"
+      admin_password: "(( ..cf.uaa.admin_credentials.password ))"
+  max_in_flight: 1
+  name: delete-sub-deployments
+  resource_definitions:
+  - configurable: true
+    constraints:
+      min: 1024
+    default: 1024
+    label: RAM
+    name: ram
+    type: integer
+  - configurable: true
+    constraints:
+      min: 2048
+    default: 2048
+    label: Ephemeral Disk
+    name: ephemeral_disk
+    type: integer
+  - configurable: false
+    default: 0
+    label: Persistent Disk
+    name: persistent_disk
+    type: integer
+  - configurable: true
+    constraints:
+      min: 1
+      power_of_two: true
+    default: 1
+    label: CPU
+    name: cpu
+    type: integer
+  resource_label: delete-sub-deployments
+  single_az_only: false
+  templates:
+  - name: delete-sub-deployments
+    release: on-demand-service-broker
+- description: deregister-broker
+  dynamic_ip: 1
+  static_ip: 0
+  instance_definition:
+    configurable: true
+    constraints:
+      min: 0
+    default: 1
+    label: Instances
+    name: instances
+    type: integer
+  label: deregister-broker
+  manifest: |
+    broker_name: <%=o("ondemand_job_types","deregister-broker")["manifest"]["broker_name"]%>
+    disable_ssl_cert_verification: (( ..cf.ha_proxy.skip_cert_verify.value ))
+    cf:
+      api_url: https://api.(( ..cf.cloud_controller.system_domain.value ))
+      admin_username: "(( ..cf.uaa.admin_credentials.identity ))"
+      admin_password: "(( ..cf.uaa.admin_credentials.password ))"
+  max_in_flight: 1
+  name: deregister-broker
+  resource_definitions:
+  - configurable: true
+    constraints:
+      min: 1024
+    default: 1024
+    label: RAM
+    name: ram
+    type: integer
+  - configurable: true
+    constraints:
+      min: 2048
+    default: 2048
+    label: Ephemeral Disk
+    name: ephemeral_disk
+    type: integer
+  - configurable: false
+    default: 0
+    label: Persistent Disk
+    name: persistent_disk
+    type: integer
+  - configurable: true
+    constraints:
+      min: 1
+      power_of_two: true
+    default: 1
+    label: CPU
+    name: cpu
+    type: integer
+  resource_label: deregister-broker
+  single_az_only: false
+  templates:
+  - name: deregister-broker
+    release: on-demand-service-broker
+- description: register-broker
+  dynamic_ip: 1
+  static_ip: 0
+  instance_definition:
+    configurable: true
+    constraints:
+      min: 0
+    default: 1
+    label: Instances
+    name: instances
+    type: integer
+  label: register-broker
+  manifest: |
+    broker_name: <%=o("ondemand_job_types","register-broker")["manifest"]["broker_name"]%>
+    disable_ssl_cert_verification: (( ..cf.ha_proxy.skip_cert_verify.value ))
+    cf:
+      api_url: "(( cf_api_url.value ))"
+      admin_username: "(( ..cf.uaa.admin_credentials.identity ))"
+      admin_password: "(( ..cf.uaa.admin_credentials.password ))"
+  max_in_flight: 1
+  name: register-broker
+  resource_definitions:
+  - configurable: true
+    constraints:
+      min: 1024
+    default: 1024
+    label: RAM
+    name: ram
+    type: integer
+  - configurable: true
+    constraints:
+      min: 2048
+    default: 2048
+    label: Ephemeral Disk
+    name: ephemeral_disk
+    type: integer
+  - configurable: false
+    default: 0
+    label: Persistent Disk
+    name: persistent_disk
+    type: integer
+  - configurable: true
+    constraints:
+      min: 1
+      power_of_two: true
+    default: 1
+    label: CPU
+    name: cpu
+    type: integer
+  resource_label: register-broker
+  single_az_only: false
+  templates:
+  - name: register-broker
+    release: on-demand-service-broker
+- description: service-metrics-adapter
+  dynamic_ip: 1
+  static_ip: 0
+  instance_definition:
+    configurable: true
+    constraints:
+      min: 0
+    default: 1
+    label: Instances
+    name: instances
+    type: integer
+  label: service-metrics-adapter
+  max_in_flight: 1
+  name: service-metrics-adapter
+  resource_definitions:
+  - configurable: true
+    constraints:
+      min: 1024
+    default: 1024
+    label: RAM
+    name: ram
+    type: integer
+  - configurable: true
+    constraints:
+      min: 2048
+    default: 2048
+    label: Ephemeral Disk
+    name: ephemeral_disk
+    type: integer
+  - configurable: false
+    default: 0
+    label: Persistent Disk
+    name: persistent_disk
+    type: integer
+  - configurable: true
+    constraints:
+      min: 1
+      power_of_two: true
+    default: 1
+    label: CPU
+    name: cpu
+    type: integer
+  resource_label: service-metrics-adapter
+  single_az_only: false
+  templates:
+  - name: service-metrics-adapter
+    release: on-demand-service-broker
+- description: upgrade-sub-deployments
+  dynamic_ip: 1
+  static_ip: 0
+  instance_definition:
+    configurable: true
+    constraints:
+      min: 0
+    default: 1
+    label: Instances
+    name: instances
+    type: integer
+  label: upgrade-sub-deployments
+  manifest: |
+  max_in_flight: 1
+  name: upgrade-sub-deployments
+  property_blueprints:
+  resource_definitions:
+  - configurable: true
+    constraints:
+      min: 1024
+    default: 1024
+    label: RAM
+    name: ram
+    type: integer
+  - configurable: true
+    constraints:
+      min: 2048
+    default: 2048
+    label: Ephemeral Disk
+    name: ephemeral_disk
+    type: integer
+  - configurable: false
+    default: 0
+    label: Persistent Disk
+    name: persistent_disk
+    type: integer
+  - configurable: true
+    constraints:
+      min: 1
+      power_of_two: true
+    default: 1
+    label: CPU
+    name: cpu
+    type: integer
+  resource_label: upgrade-sub-deployments
+  single_az_only: false
+  templates:
+  - name: upgrade-sub-deployments
+    release: on-demand-service-broker
+form_types:
+- description: broker
+  label: broker
+  name: broker
+  property_inputs:
+  <%o("ondemand_job_types","broker")["property_blueprints"]["vm_types"].each do|vm_type|%>
+  - reference: .broker.<%=vm_type%>
+    label: <%=vm_type%>
+    description: <%=vm_type%>
+  <%end%>
+  <%o("ondemand_job_types","broker")["property_blueprints"]["az_multi_select"].each do|az|%>
+  - reference: .broker.<%=az%>
+    label: <%=az%>
+    description: <%=az%>
+  <%end%>

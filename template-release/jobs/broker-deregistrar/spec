@@ -1,0 +1,21 @@
+---
+name: broker-deregistrar
+
+templates: 
+  run.erb: bin/run
+packages: 
+- broker
+
+properties: 
+  cf.admin_username:
+    description: "admin user for cloud foundry"
+  cf.admin_password:
+    description: "admin password for cloud foundry"
+  cf.system_domain:
+    description: "domain for broker in cloud foundry"
+  broker.name:
+    description: "service name for broker"
+  broker.username:
+    description: "username for this broker"
+  broker.password:
+    description: "password for this broker"

@@ -1,0 +1,22 @@
+---
+binding_credentials:
+- name: servers
+  datatype: array
+  value: "[JOB.haproxy.ip]"
+instance_groups:
+- name: haproxy
+  templates:
+  - haproxy
+    keepalived
+- name: lvs
+  templates:
+  - lvs
+    keepalived
+- name: nginx
+  templates:
+  - nginx
+    keepalived
+- name: apache
+  templates:
+  - apache
+    keepalived

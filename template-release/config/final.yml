@@ -1,0 +1,5 @@
+name: NAME
+blobstore:
+  provider: local
+  options:
+    blobstore_path: "/tmp/blobs"

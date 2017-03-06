@@ -1,0 +1,32 @@
+#!/bin/bash
+
+set -ex
+
+HOME=/var/vcap/bosh
+PATH=/var/vcap/packages/cli/bin:$PATH
+BROKER_NAME=<%= p("broker.name") %>
+
+SYSTEM_DOMAIN=<%= p("cf.system_domain") %>
+
+function authenticate_and_target() {
+  cf api https://api.$SYSTEM_DOMAIN --skip-ssl-validation
+  cf auth <%= p("cf.admin_username") %> <%= p("cf.admin_password") %>
+  cf create-org system
+  cf target -o system
+  cf create-space service-brokers
+  cf target -s service-brokers
+}
+
+mkdir -p /var/vcap/data/tmp
+TMPDIR=/var/vcap/data/tmp
+cf -v
+sed "/^ *$/d" /var/vcap/jobs/broker-registrar/config/manifest.yml > /var/vcap/sys/run/broker-registrar/manifest.yml
+cf push -f /var/vcap/sys/run/broker-registrar/manifest.yml --no-start 
+push_app
+cf restart $BROKER_NAME
+
+BROKER_URL=http://${BROKER_NAME}.${SYSTEM_DOMAIN}
+cf update-service-broker $BROKER_NAME  <%=p("broker.username")%> <%=p("broker.password")%> ${BROKER_URL} || \
+cf create-service-broker $BROKER_NAME  <%=p("broker.username")%> <%=p("broker.password")%> ${BROKER_URL}  
+
+curl -u <%=p("broker.username")%>:<%=p("broker.password")%> $BROKER_URL 2>/dev/null |jq --raw-output  ".services[].name"|xargs cf enable-service-access

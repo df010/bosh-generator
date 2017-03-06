@@ -1,0 +1,8 @@
+set -e
+pwd
+echo ${BOSH_INSTALL_TARGET}
+cp broker/* ${BOSH_INSTALL_TARGET}/
+cd ${BOSH_INSTALL_TARGET}/
+unzip cf.zip
+rm cf.zip
+cd -

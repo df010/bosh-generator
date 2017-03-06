@@ -1,0 +1,340 @@
+---
+job_types: 
+- description: broker
+  dynamic_ip: 1
+  static_ip: 0
+  instance_definition:
+    configurable: true
+    constraints:
+      min: 0
+    default: 1
+    label: Instances
+    name: instances
+    type: integer
+  label: broker
+  manifest: |
+    startup_banner: true
+    port: 8080
+    disable_ssl_cert_verification: (( ..cf.ha_proxy.skip_cert_verify.value ))
+    bosh:
+      url: https://(( $director.deployment_ip )):25555
+      root_ca_cert: (( $director.ca_public_key ))
+      authentication:
+        uaa:
+          url: https://(( $director.deployment_ip )):8443
+          client_id: (( $self.uaa_client_name ))
+          client_secret: (( $self.uaa_client_secret ))
+    cf:
+      url: https://api.(( ..cf.cloud_controller.system_domain.value ))
+      authentication:
+        url: https://uaa.(( ..cf.cloud_controller.system_domain.value ))
+        user_credentials:
+          username: (( ..cf.uaa.system_services_credentials.identity ))
+          password: (( ..cf.uaa.system_services_credentials.password ))
+    service_adapter:
+      path: /var/vcap/packages/ondemand-service-adapter/bin/service-adapter
+    <%=p("broker")['manifest']%>
+    startup_banner: true
+  max_in_flight: 1
+  name: broker
+  resource_definitions:
+  - configurable: true
+    constraints:
+      min: 1024
+    default: 1024
+    label: RAM
+    name: ram
+    type: integer
+  - configurable: true
+    constraints:
+      min: 2048
+    default: 2048
+    label: Ephemeral Disk
+    name: ephemeral_disk
+    type: integer
+  - configurable: false
+    default: 128
+    constraints:
+      min: 128
+    label: Persistent Disk
+    name: persistent_disk
+    type: integer
+  - configurable: true
+    constraints:
+      min: 1
+      power_of_two: true
+    default: 1
+    label: CPU
+    name: cpu
+    type: integer
+  resource_label: broker
+  single_az_only: false
+  templates:
+  - name: broker
+    release: on-demand-service-broker
+  - name: ondemand-service-adapter
+    release: ondemand-service-adapter
+  - name: ondemand
+    release: <%=p("release")["releaseName"]%>
+  property_blueprints:
+ <%= p("broker").send("property_blueprints",true)%>
+- description: delete-all-service-instances
+  dynamic_ip: 1
+  static_ip: 0
+  instance_definition:
+    configurable: false
+    default: 1
+    label: Instances
+    name: instances
+    type: integer
+  label: delete-all-service-instances
+  manifest: |
+    timeout_minutes: 30
+    disable_ssl_cert_verification: (( ..cf.ha_proxy.skip_cert_verify.value ))
+    cf:
+      api_url: https://api.(( ..cf.cloud_controller.system_domain.value ))
+      admin_username: "(( ..cf.uaa.admin_credentials.identity ))"
+      admin_password: "(( ..cf.uaa.admin_credentials.password ))"
+  max_in_flight: 1
+  name: delete-all-service-instances
+  errand: true
+  resource_definitions:
+  - configurable: true
+    constraints:
+      min: 1024
+    default: 1024
+    label: RAM
+    name: ram
+    type: integer
+  - configurable: true
+    constraints:
+      min: 2048
+    default: 2048
+    label: Ephemeral Disk
+    name: ephemeral_disk
+    type: integer
+  - configurable: false
+    default: 0
+    label: Persistent Disk
+    name: persistent_disk
+    type: integer
+  - configurable: true
+    constraints:
+      min: 1
+      power_of_two: true
+    default: 1
+    label: CPU
+    name: cpu
+    type: integer
+  resource_label: delete-all-service-instances
+  single_az_only: false
+  templates:
+  - name: delete-all-service-instances
+    release: on-demand-service-broker
+- description: deregister-broker
+  dynamic_ip: 1
+  static_ip: 0
+  instance_definition:
+    configurable: false
+    default: 1
+    label: Instances
+    name: instances
+    type: integer
+  label: deregister-broker
+  manifest: |
+    broker_name: <%=o("ondemand_job_types","deregister-broker")["manifest"]["broker_name"]%>
+    disable_ssl_cert_verification: (( ..cf.ha_proxy.skip_cert_verify.value ))
+    cf:
+      api_url: https://api.(( ..cf.cloud_controller.system_domain.value ))
+      admin_username: "(( ..cf.uaa.admin_credentials.identity ))"
+      admin_password: "(( ..cf.uaa.admin_credentials.password ))"
+  max_in_flight: 1
+  name: deregister-broker
+  errand: true
+  resource_definitions:
+  - configurable: true
+    constraints:
+      min: 1024
+    default: 1024
+    label: RAM
+    name: ram
+    type: integer
+  - configurable: true
+    constraints:
+      min: 2048
+    default: 2048
+    label: Ephemeral Disk
+    name: ephemeral_disk
+    type: integer
+  - configurable: false
+    default: 0
+    label: Persistent Disk
+    name: persistent_disk
+    type: integer
+  - configurable: true
+    constraints:
+      min: 1
+      power_of_two: true
+    default: 1
+    label: CPU
+    name: cpu
+    type: integer
+  resource_label: deregister-broker
+  single_az_only: false
+  templates:
+  - name: deregister-broker
+    release: on-demand-service-broker
+- description: register-broker
+  dynamic_ip: 1
+  static_ip: 0
+  instance_definition:
+    configurable: false
+    default: 1
+    label: Instances
+    name: instances
+    type: integer
+  label: register-broker
+  manifest: |
+    broker_name: <%=o("ondemand_job_types","register-broker")["manifest"]["broker_name"]%>
+    disable_ssl_cert_verification: (( ..cf.ha_proxy.skip_cert_verify.value ))
+    cf:
+      api_url:  https://api.(( ..cf.cloud_controller.system_domain.value ))
+      admin_username: "(( ..cf.uaa.admin_credentials.identity ))"
+      admin_password: "(( ..cf.uaa.admin_credentials.password ))"
+  max_in_flight: 1
+  name: register-broker
+  errand: true
+  resource_definitions:
+  - configurable: true
+    constraints:
+      min: 1024
+    default: 1024
+    label: RAM
+    name: ram
+    type: integer
+  - configurable: true
+    constraints:
+      min: 2048
+    default: 2048
+    label: Ephemeral Disk
+    name: ephemeral_disk
+    type: integer
+  - configurable: false
+    default: 0
+    label: Persistent Disk
+    name: persistent_disk
+    type: integer
+  - configurable: true
+    constraints:
+      min: 1
+      power_of_two: true
+    default: 1
+    label: CPU
+    name: cpu
+    type: integer
+  resource_label: register-broker
+  single_az_only: false
+  templates:
+  - name: register-broker
+    release: on-demand-service-broker
+- description: service-metrics-adapter
+  dynamic_ip: 1
+  static_ip: 0
+  instance_definition:
+    configurable: true
+    constraints:
+      min: 0
+    default: 1
+    label: Instances
+    name: instances
+    type: integer
+  label: service-metrics-adapter
+  max_in_flight: 1
+  name: service-metrics-adapter
+  resource_definitions:
+  - configurable: true
+    constraints:
+      min: 1024
+    default: 1024
+    label: RAM
+    name: ram
+    type: integer
+  - configurable: true
+    constraints:
+      min: 2048
+    default: 2048
+    label: Ephemeral Disk
+    name: ephemeral_disk
+    type: integer
+  - configurable: false
+    default: 0
+    label: Persistent Disk
+    name: persistent_disk
+    type: integer
+  - configurable: true
+    constraints:
+      min: 1
+      power_of_two: true
+    default: 1
+    label: CPU
+    name: cpu
+    type: integer
+  resource_label: service-metrics-adapter
+  single_az_only: false
+  templates:
+  - name: service-metrics-adapter
+    release: on-demand-service-broker
+- description: upgrade-all-service-instances
+  dynamic_ip: 1
+  static_ip: 0
+  instance_definition:
+    configurable: false
+    default: 1
+    label: Instances
+    name: instances
+    type: integer
+  label: upgrade-all-service-instances
+  manifest: |
+  max_in_flight: 1
+  name: upgrade-all-service-instances
+  errand: true
+  property_blueprints:
+  resource_definitions:
+  - configurable: true
+    constraints:
+      min: 1024
+    default: 1024
+    label: RAM
+    name: ram
+    type: integer
+  - configurable: true
+    constraints:
+      min: 2048
+    default: 2048
+    label: Ephemeral Disk
+    name: ephemeral_disk
+    type: integer
+  - configurable: false
+    default: 0
+    label: Persistent Disk
+    name: persistent_disk
+    type: integer
+  - configurable: true
+    constraints:
+      min: 1
+      power_of_two: true
+    default: 1
+    label: CPU
+    name: cpu
+    type: integer
+  resource_label: upgrade-all-service-instances
+  single_az_only: false
+  templates:
+  - name: upgrade-all-service-instances
+    release: on-demand-service-broker
+form_types:
+- description: broker
+  label: broker
+  name: broker
+  property_inputs:
+  <%=p("broker").send("property_inputs", true)%>

@@ -1,0 +1,130 @@
+---
+name: <%= p("name") %>
+label: <%= p("name") %>
+service_broker: true
+releases:
+<% p("releases").each do |rel|%>
+- name: <%=rel["name"]%>
+  file: <%=rel["file"]%>
+  version: <%=rel["version"]%>
+<% end %>
+stemcell_criteria:
+  version: '<%= p("stemcell_version") %>'
+  os: ubuntu-trusty
+  requires_cpi: false
+description: <%= p("description")%>
+icon_image: <%= p("icon_image")%>
+metadata_version: '1.8'
+product_version: '<%= p("product_version")%>'
+minimum_version_for_upgrade: '0.1'
+rank: 80
+serial: false
+<%if !p("broker").nil? %>
+post_deploy_errands:
+- name: register-broker
+- name: upgrade-all-service-instances
+pre_delete_errands:
+- name: delete-all-service-instances
+- name: deregister-broker
+<% end %>
+<%if job_exist?("broker-registrar")%>
+post_deploy_errands:
+- name: broker-registrar
+<% end %>
+<%if job_exist?("broker-deregistrar")%>
+pre_delete_errands:
+- name: broker-deregistrar
+<% end %>
+job_types:
+<% p("job_types").each do |job_type|%>
+- description: <%= job_type["description"]%>
+  dynamic_ip: 1
+  static_ip: 0
+  <%if ! job_type["errand"].nil?%>
+  errand: <%=job_type["errand"]%>
+  <%end%>
+  instance_definition:
+   <%if job_type["errand"].nil? || !job_type["errand"] %>
+    configurable: true
+    constraints:
+      min: 0
+    <%end %>
+    default: 1
+    label: Instances
+    name: instances
+    type: integer
+  label: <%= job_type["label"] %>
+  manifest: |
+  <%= job_type["manifest"] %>
+  max_in_flight: 1
+  name: <%= job_type["name"] %>
+  property_blueprints:
+<% job_type["property_blueprints"].each do|prop|%>
+  - name: <%= prop['name'] %>
+    <%if prop['configurable'].nil? || prop['configurable']%>
+    configurable: true
+    <%end %>
+    <%if prop['optional'].nil? || !prop['optional']%>
+    optional: false
+    <%end %>
+    type: <%= prop['type'] %>
+    <% if ! prop['default'].nil? %>
+        <% if prop['default'].is_a? Hash %>
+    default:
+        <% prop['default'].each do |key, value| %>
+      <%= key %>: <%= value%>
+        <% end %>
+        <%else %>
+    default: <%= prop['default'] %>
+        <% end %>
+    <% end %>
+<%end%>
+  resource_definitions:
+  - configurable: true
+    constraints:
+      min: 1024
+    default: 1024
+    label: RAM
+    name: ram
+    type: integer
+  - configurable: true
+    constraints:
+      min: 2048
+    default: 2048
+    label: Ephemeral Disk
+    name: ephemeral_disk
+    type: integer
+  - configurable: false
+    default: 0
+    label: Persistent Disk
+    name: persistent_disk
+    type: integer
+  - configurable: true
+    constraints:
+      min: 1
+      power_of_two: true
+    default: 1
+    label: CPU
+    name: cpu
+    type: integer
+  resource_label: <%= job_type["name"] %>
+  single_az_only: false
+  templates:
+<%job_type["templates"].each do |template|%>
+  - name: <%= template["name"] %>
+    release: <%= job_type["release"] %>
+<%end%>
+<% end %>
+
+form_types:
+<% p("form_types").each do |form_type|%>
+- description: <%= form_type["description"] %>
+  label: <%= form_type["label"] %>
+  name: <%= form_type["name"] %>
+  property_inputs:
+  <% form_type["property_inputs"]. each do |property_input|%>
+  - description: <%= property_input["description"] %>
+    label: <%= property_input["label"] %>
+    reference: <%= property_input["reference"] %>
+  <% end %>
+<% end %>
