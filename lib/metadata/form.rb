@@ -13,6 +13,7 @@ class Form < Base
 
   def property_inputs
     initPropertyInputs
+    # STDERR.puts "after init is:: "+@property_inputs.to_s
     @property_inputs
   end
   #
@@ -35,7 +36,7 @@ class Form < Base
         template.property_inputs.each do |item|
           if hardcoded[item["reference"]].nil?
             obj = item.clone
-            if(ignore obj["reference"])
+            if(! ignore obj["reference"])
               if !@ondemand
                 if ! obj["reference"].start_with? "."+@name
                   obj["reference"]="."+@name+"."+obj["reference"];
@@ -50,13 +51,29 @@ class Form < Base
           end
         end
       end
+      @property_inputs = unique(@property_inputs)
     end
-    end
+  end
+
+  def unique property_inputs
+    names = {}
+    property_inputs.select {|print|
+      if (names[print["reference"]].nil? )
+        names[print["reference"]]=print["reference"];
+        true
+      else
+        false
+      end
+    }
+  end
 
     def ignore key
+      STDERR.puts "ignore map is:: "+@ignore_map.to_s
+      STDERR.puts "and key is:: "+key.to_s
       if @ignore_map.nil?
         return false
       end
+
       return !@ignore_map[key].nil?
     end
 

@@ -34,8 +34,9 @@ class Release < Base
       @job_types.each {|job| job.ondemand = true}
       @form_types.each {|form| form.ondemand = true}
       @broker = Broker.new @config,@job_types
-      @form_types.each {|form| form.ignore_map = (@broker.ignore_map form.name,true)}
+      @form_types.each {|form| form.ignore_map = (@broker.ignore_map nil,true)}
     end
+    # STDERR.puts "form types are:: "+form_types.to_s
   end
 
 end

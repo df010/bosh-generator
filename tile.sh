@@ -57,6 +57,7 @@ $ONDEMAND && { cmp --silent $TMP_DIR/config.yml.erb  $REL_FOLDER/jobs/ondemand/t
   cp $TMP_DIR/config.yml.erb $REL_FOLDER/jobs/ondemand/templates/; \
   bosh create-release --tarball; \
 } }
+#cat $TMP_DIR/template.yml.erb
 $DIR/lib/gen_metadata.rb $TMP_DIR/template.yml.erb $REL_FOLDER/`release_file` |sed -e "/^ *$/d" > build/metadata/metadata.yml
 
 

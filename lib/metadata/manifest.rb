@@ -60,7 +60,7 @@ class Manifest < Base
         if ondemand
           key = jobName+"."+key
         end
-        STDERR.puts " result map is:: " +"(( "+toJobPropName(key)+ ".value ))"
+        #STDERR.puts " result map is:: " +"(( "+toJobPropName(key)+ ".value ))"
         return "(( "+toJobPropName(key)+ ".value ))";
     end
   end

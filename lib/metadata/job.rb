@@ -24,19 +24,19 @@ class Job < Base
 
   def manifest
     data = yaml(properties, "    ")
-    STDERR.puts ".........."+ data.to_s
+    #STDERR.puts ".........."+ data.to_s
     data;
   end
 
   def properties
     result = {}
-    STDERR.puts "on demand is:: "+@ondemand.to_s
+    #STDERR.puts "on demand is:: "+@ondemand.to_s
     @templates.each do |template|
       obj = template.manifest.toManifest(@name, @skip_default, @ondemand);
       result.deep_merge! obj;
     end
     result.deep_merge! pairToHash(@manifest_config)
-    # STDERR.puts "result properties is:: "+result.to_s
+    # #STDERR.puts "result properties is:: "+result.to_s
   end
 
   def property_blueprints
@@ -44,12 +44,13 @@ class Job < Base
     @templates.each do |template|
       result.push *template.property_blueprints;
     end
+    result = unique(result)
 
     hardcoded = {}
     !@manifest_config.nil? && @manifest_config.each do |key, value|
       hardcoded[toJobPropName key] = value
     end
-    result.select do |property_blueprint|
+    result = result.select do |property_blueprint|
       hardcoded[property_blueprint["name"]].nil?
     end
     if @ondemand
@@ -64,6 +65,17 @@ class Job < Base
 
 
   private
+  def unique property_blueprints
+    names = {}
+    property_blueprints.select {|print|
+      if (names[print["name"]].nil? )
+        names[print["name"]]=print["name"];
+        true
+      else
+        false
+      end
+    }
+  end
   def pairToHash pair
     if pair.nil?
       {}

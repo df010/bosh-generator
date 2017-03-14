@@ -19,6 +19,8 @@ job_types:
     bosh:
       url: https://(( $director.deployment_ip )):25555
       root_ca_cert: (( $director.ca_public_key ))
+      user: (( $director.username))
+      password: (( $director.password))
       authentication:
         uaa:
           url: https://(( $director.deployment_ip )):8443

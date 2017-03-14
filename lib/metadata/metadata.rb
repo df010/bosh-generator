@@ -47,6 +47,7 @@ class Metadata < Base
 
   def form_types
     @release.form_types.select do |form|
+      STDERR.puts form.property_inputs.to_s
       !form.property_inputs.nil? && form.property_inputs.length >0
     end
   end
