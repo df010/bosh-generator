@@ -13,6 +13,9 @@ class Job < Base
     @release = releaseName;
     @templateNames = job["templates"];
     @skip_default = ("true" == job["skip_default"]);
+    # @resource_definitions = job["resource_definitions"]
+    # @instance_definition = job["instance_definition"]
+    @baseconfig = job
     @ondemand = false;
   end
 
@@ -35,7 +38,7 @@ class Job < Base
       obj = template.manifest.toManifest(@name, @skip_default, @ondemand);
       result.deep_merge! obj;
     end
-    result.deep_merge! pairToHash(@manifest_config)
+    result.deep_merge! @manifest_config
     # #STDERR.puts "result properties is:: "+result.to_s
   end
 
@@ -47,12 +50,18 @@ class Job < Base
     result = unique(result)
 
     hardcoded = {}
-    !@manifest_config.nil? && @manifest_config.each do |key, value|
+    credentials = {}
+    !@manifest_config.nil? && hashToPair(@manifest_config, "").each do |key, value|
+      STDERR.puts "hard coded key is:: "+key.to_s
+      pushCredentialBlueprintsNames credentials, value
       hardcoded[toJobPropName key] = value
     end
     result = result.select do |property_blueprint|
       hardcoded[property_blueprint["name"]].nil?
     end
+    credentials.each {|key, value|
+      result.push( {"name" => key, "type" => "simple_credentials", "configurable" => false,  "default" => { "identity" => key.gsub(/(.*)_credentials/,"\\1") } })
+    }
     if @ondemand
       return result.map {|prop|
         item = prop.clone;
@@ -65,6 +74,21 @@ class Job < Base
 
 
   private
+
+  def pushCredentialBlueprintsNames credentials, value
+    if ! value.is_a? String
+      return
+    end
+    cName = value.gsub(/^ *\(\( *([^\.]*)\.identity *\)\)/, "\\1")
+    if( cName != value)
+      credentials[cName]=cName
+    end
+
+    cName = value.gsub(/^ *\(\( *([^\.]*)\.password *\)\)/, "\\1")
+    if( cName != value )
+      credentials[cName]=cName
+    end
+  end
   def unique property_blueprints
     names = {}
     property_blueprints.select {|print|
@@ -87,5 +111,7 @@ class Job < Base
       result
     end
   end
+
+
 
 end

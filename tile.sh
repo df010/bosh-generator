@@ -34,25 +34,36 @@ release_file() {
 }
 
 REL_FOLDER=$1
+VERSION=$2
 REL_FOLDER=`cd $REL_FOLDER;pwd`
 DIR=`cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd`
 export TMP_DIR=$(mktemp -d)
 cd $REL_FOLDER
 
 PRODUCT_NAME=`grep "^name:" manifests/template.yml|cut -d" " -f2`
+if [[ -z $VERSION ]]; then
+  num=`sed -n 's/product_version: [0-9]\+\.[0-9]\+\.\(.*\)/\1/p' manifests/template.yml`
+  num=$((num+1))
+  sed  -i "s/\(product_version: [0-9]\+\.[0-9]\+\.\).*/\1$num/" manifests/template.yml
+  echo "updated num is "$num
+else
+  sed -i "s/\(product_version: \).*/\1$VERSION/" manifests/template.yml
+  echo "updated version is "$VERSION
+fi
 PRODUCT_VERSION=`grep "^product_version:" manifests/template.yml|cut -d" " -f2`
+echo "provddd "$PRODUCT_VERSION
 mkdir -p build
 rm -rf build/*
 mkdir -p build/metadata
 cp $DIR/templates/base.yml.erb $TMP_DIR/template.yml.erb
 ONDEMAND=`grep -q "^ondemand_job_types" $REL_FOLDER/manifests/template.yml`;
-$ONDEMAND &&  combine $DIR/templates/ondemand.yml.erb $TMP_DIR/template.yml.erb
-#cat $TMP_DIR/base.yml.erb
+[[ ! -z $ONDEMAND ]] &&  combine $DIR/templates/ondemand.yml.erb $TMP_DIR/template.yml.erb
+#cat $TMP_DIR/template.yml.erb
 export LOAD_PATH=$DIR
-$DIR/lib/gen_metadata.rb $TMP_DIR/template.yml.erb $REL_FOLDER/`release_file` config > $TMP_DIR/config.yml.erb
+[[ ! -z $ONDEMAND ]] && $DIR/lib/gen_metadata.rb $TMP_DIR/template.yml.erb $REL_FOLDER/`release_file` config > $TMP_DIR/config.yml.erb
 #cat $TMP_DIR/config.yml.erb
 
-$ONDEMAND && { cmp --silent $TMP_DIR/config.yml.erb  $REL_FOLDER/jobs/ondemand/templates/config.yml.erb || { \
+[[ ! -z $ONDEMAND ]] && { cmp --silent $TMP_DIR/config.yml.erb  $REL_FOLDER/jobs/ondemand/templates/config.yml.erb || { \
   cp -r $DIR/template-release/jobs/ondemand $REL_FOLDER/jobs; \
   cp $TMP_DIR/config.yml.erb $REL_FOLDER/jobs/ondemand/templates/; \
   bosh create-release --tarball; \
@@ -60,14 +71,13 @@ $ONDEMAND && { cmp --silent $TMP_DIR/config.yml.erb  $REL_FOLDER/jobs/ondemand/t
 #cat $TMP_DIR/template.yml.erb
 $DIR/lib/gen_metadata.rb $TMP_DIR/template.yml.erb $REL_FOLDER/`release_file` |sed -e "/^ *$/d" > build/metadata/metadata.yml
 
-
 mkdir -p build/releases
 rm -rf build/releases/*
 
-cp $DIR/releases/** build/releases/
+[[ ! -z $ONDEMAND ]] && cp $DIR/releases/** build/releases/
 
 
-ls -1  $DIR/releases|while read rel;do \
+ls -1  build/releases|while read rel;do \
 rel2=`echo $rel|sed "s/\([a-zA-Z0-9]\)-\([0-9]\+\)/\1 \2/1"`; \
 echo "- name: "`echo $rel2|cut -d" " -f1`; \
 echo "  file: "`echo $rel`; \

@@ -39,6 +39,10 @@ class GenMetadata
         return result
     end
 
+    def p?(key)
+        return !@metadata[key].nil?
+    end
+
     #
     def o (preKey,nameValue)
         @metadata[preKey].each do |item|

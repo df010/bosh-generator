@@ -28,7 +28,7 @@ class Form < Base
   def initPropertyInputs
     if @property_inputs.nil?
       hardcoded = {}
-      !@manifest_config.nil?  && @manifest_config.each do |key, value|
+      !@manifest_config.nil?  && hashToPair(@manifest_config,"").each do |key, value|
         hardcoded[toJobPropName key] = value
       end
       @property_inputs = []

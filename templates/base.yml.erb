@@ -1,7 +1,9 @@
 ---
 name: <%= p("name") %>
 label: <%= p("name") %>
+<% if p?("broker") %>
 service_broker: true
+<% end %>
 releases:
 <% p("releases").each do |rel|%>
 - name: <%=rel["name"]%>
@@ -14,12 +16,12 @@ stemcell_criteria:
   requires_cpi: false
 description: <%= p("description")%>
 icon_image: <%= p("icon_image")%>
-metadata_version: '1.8'
+metadata_version: '<%= p("metadata_version", "1.8")%>'
 product_version: '<%= p("product_version")%>'
 minimum_version_for_upgrade: '0.1'
 rank: 80
 serial: false
-<%if !p("broker").nil? %>
+<%if p?("broker") %>
 post_deploy_errands:
 - name: register-broker
 - name: upgrade-all-service-instances
@@ -38,18 +40,18 @@ pre_delete_errands:
 job_types:
 <% p("job_types").each do |job_type|%>
 - description: <%= job_type["description"]%>
-  dynamic_ip: 1
-  static_ip: 0
+  dynamic_ip: <%= job_type.get(1, "dynamic_ip")%>
+  static_ip: <%= job_type.get(0,"static_ip")%>
   <%if ! job_type["errand"].nil?%>
   errand: <%=job_type["errand"]%>
   <%end%>
   instance_definition:
    <%if job_type["errand"].nil? || !job_type["errand"] %>
-    configurable: true
+    configurable: <%=job_type.get(true,"instance_definition","configurable")%>
     constraints:
-      min: 0
+      min: <%=job_type.get(0,"instance_definition","constraints","min")%>
     <%end %>
-    default: 1
+    default:  <%=job_type.get(1,"instance_definition","default")%>
     label: Instances
     name: instances
     type: integer
@@ -94,8 +96,10 @@ job_types:
     label: Ephemeral Disk
     name: ephemeral_disk
     type: integer
-  - configurable: false
-    default: 0
+  - configurable: <%=job_type.get_from_arr("resource_definitions", "persistent_disk","configurable", false)%>
+    default: <%=job_type.get_from_arr("resource_definitions", "persistent_disk","default", 0)%>
+    constraints:
+      min: 1024
     label: Persistent Disk
     name: persistent_disk
     type: integer

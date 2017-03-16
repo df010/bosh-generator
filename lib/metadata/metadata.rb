@@ -2,7 +2,7 @@ require_relative 'release'
 require_relative 'base'
 require_relative 'broker'
 class Metadata < Base
-  attr_accessor :releases, :name, :job_types, :ondemand_job_types, :form_types, :releases, :stemcell_version, :description, :icon_image, :product_version, :release
+  attr_accessor :releases, :name, :job_types, :ondemand_job_types, :form_types, :stemcell_version, :description, :icon_image, :product_version, :release
 
 
   def initialize releaseFile
@@ -14,15 +14,8 @@ class Metadata < Base
     @description=@config["description"];
     @icon_image=@config["icon_image"];
     @product_version=@config["product_version"];
+    @baseconfig = @config
 
-  end
-
-  def [](k)
-    data = self.send(k);
-    if data.nil?
-      data = @config[k]
-    end
-    data;
   end
 
     def ondemand?
