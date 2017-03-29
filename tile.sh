@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 combine () {
     jobstart=$(( 1 + `grep -n "^job_types" $1|cut -d":" -f1` ))
 
@@ -56,7 +56,8 @@ mkdir -p build
 rm -rf build/*
 mkdir -p build/metadata
 cp $DIR/templates/base.yml.erb $TMP_DIR/template.yml.erb
-ONDEMAND=`grep -q "^ondemand_job_types" $REL_FOLDER/manifests/template.yml`;
+grep -q "^ondemand_job_types" $REL_FOLDER/manifests/template.yml;
+ONDEMAND=$?
 [[ ! -z $ONDEMAND ]] &&  combine $DIR/templates/ondemand.yml.erb $TMP_DIR/template.yml.erb
 #cat $TMP_DIR/template.yml.erb
 export LOAD_PATH=$DIR
@@ -98,4 +99,4 @@ cd build
 zip -r ${PRODUCT_NAME}.${PRODUCT_VERSION}.pivotal *
 cd -
     
-rm -rf $TMP_DIR
+#rm -rf $TMP_DIR

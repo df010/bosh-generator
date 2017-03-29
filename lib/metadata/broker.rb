@@ -154,15 +154,24 @@ class Broker < Base
 
 
   def shared_input_mappings
-    @brokeryml["input_mappings"].select {|map|
+    if !@brokeryml["input_mappings"].nil? 
+      @brokeryml["input_mappings"].select {|map|
       map["shared"]
-    }
+      } 
+    else
+        []
+    end 
   end
 
   def autogen_input_mappings
-    @brokeryml["input_mappings"].select {|map|
+    if !@brokeryml["input_mappings"].nil? 
+        @brokeryml["input_mappings"].select {|map|
       !(map["valuemap"] =~ /^ *[0-9]*:auto *$/).nil?
-    }
+      }
+    else
+        []
+    end
+
   end
 
   def transform data, format=false, prefix="  "

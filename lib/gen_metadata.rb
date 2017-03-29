@@ -45,6 +45,7 @@ class GenMetadata
 
     #
     def o (preKey,nameValue)
+        STDERR.puts "prekey is:: "+preKey.to_s
         @metadata[preKey].each do |item|
           if(item["name"] == nameValue)
               return item;

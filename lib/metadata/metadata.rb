@@ -2,7 +2,7 @@ require_relative 'release'
 require_relative 'base'
 require_relative 'broker'
 class Metadata < Base
-  attr_accessor :releases, :name, :job_types, :ondemand_job_types, :form_types, :stemcell_version, :description, :icon_image, :product_version, :release
+  attr_accessor :releases, :name, :job_types, :form_types, :stemcell_version, :description, :icon_image, :product_version, :release
 
 
   def initialize releaseFile
