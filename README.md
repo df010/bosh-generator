@@ -8,4 +8,5 @@ Step 1 -3 is for On Demand Service Broker Only
 
 
 test release locally
+init_vcap.sh #create vcap user, and do proper initialization
 release_test.sh RELEASE_FOLDER PACKAGE-NAME1,PACKAGE-NAME2 JOB-NAME1,JOB-NAME PROPERTY-YAML-FILE-PATH
