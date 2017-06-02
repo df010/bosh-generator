@@ -28,7 +28,7 @@ for job in $JOB_IN_ORDER; do
 done
 
 chmod +x /var/vcap/jobs/*/bin/*
-if [[ `uname` -eq "Darwin" ]]; then
+if [[ "`uname`" == "Darwin" ]]; then
   tar -xvf tools/monit-*macos*.tar.gz -C /var/vcap/monit/
 else
   tar -xvf tools/monit-*linux*.tar.gz -C /var/vcap/monit/
