@@ -52,7 +52,7 @@ class Job < Base
     hardcoded = {}
     credentials = {}
     !@manifest_config.nil? && hashToPair(@manifest_config, "").each do |key, value|
-      STDERR.puts "hard coded key is:: "+key.to_s
+      # STDERR.puts "hard coded key is:: "+key.to_s
       pushCredentialBlueprintsNames credentials, value
       hardcoded[toJobPropName key] = value
     end

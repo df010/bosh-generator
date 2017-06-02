@@ -18,10 +18,10 @@ sudo mkdir /var/vcap/monit
 sudo cp -r $REL_FOLDER/jobs /var/vcap/build
 sudo cp -r $REL_FOLDER/packages /var/vcap/build
 sudo cp -r $REL_FOLDER/src /var/vcap/build
-sudo chown -R vcap:vcap  /var/vcap
+sudo chown -R vcap  /var/vcap
 
-echo `sudo su - vcap -c "$DIR/packaging.sh $2"`
-echo `sudo su - vcap -c "$DIR/start_jobs.sh $DIR $3 $4"`
+sudo -u  vcap --login PATH= $DIR/packaging.sh $2
+sudo -u  vcap --login PATH= $DIR/start_jobs.sh $DIR $3 $CURRENT_FOLDER/$4
 
 
 

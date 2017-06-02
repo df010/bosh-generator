@@ -68,8 +68,8 @@ class Form < Base
   end
 
     def ignore key
-      STDERR.puts "ignore map is:: "+@ignore_map.to_s
-      STDERR.puts "and key is:: "+key.to_s
+      # STDERR.puts "ignore map is:: "+@ignore_map.to_s
+      # STDERR.puts "and key is:: "+key.to_s
       if @ignore_map.nil?
         return false
       end

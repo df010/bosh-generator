@@ -3,13 +3,17 @@ require_relative "base"
 class Broker < Base
   attr_reader :manifest, :property_blueprints
 
-  def initialize config, job_types
+  def initialize config, job_types,releaseVersion
     br =byName(config["ondemand_job_types"],"broker")
     @manifest=br["manifest"]
     multipleNetwork = (true == br["multiple_network"])
-    setProp @manifest, "service_deployment.stemcell", {"os"=>"ubuntu-trusty","version"=>"latest"}, false
+    setProp @manifest, "service_deployment.stemcell", {"os"=>"ubuntu-trusty","version"=>config["stemcell_version"]}, false
     setProp @manifest, "service_catalog.bindable", true, false
     setProp @manifest, "service_catalog.plan_updatable", true, false
+
+    @manifest["service_deployment"]["releases"].each do |rel|
+      rel["version"]= releaseVersion.to_s
+    end
 
     @property_blueprints = []
     @manifest["service_catalog"]["plans"].each do |plan|
@@ -106,13 +110,13 @@ class Broker < Base
   private
   def update_props props
     map = ignore_map nil,false
-    STDERR.puts "ignore map is::  "+map.to_s
+    # STDERR.puts "ignore map is::  "+map.to_s
     map.each {|key, value|
-      STDERR.puts "ignore map is::  "+key.to_s+" and "+value.to_s
+      # STDERR.puts "ignore map is::  "+key.to_s+" and "+value.to_s
       updateEle props, key, value
     }
     # removeEmpty props
-    STDERR.puts "props after update is "+props.to_s
+    # STDERR.puts "props after update is "+props.to_s
     props
   end
 

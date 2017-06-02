@@ -8,7 +8,7 @@ releases:
 <% p("releases").each do |rel|%>
 - name: <%=rel["name"]%>
   file: <%=rel["file"]%>
-  version: <%=rel["version"]%>
+  version: "<%=rel["version"]%>"
 <% end %>
 stemcell_criteria:
   version: '<%= p("stemcell_version") %>'
