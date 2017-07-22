@@ -4,14 +4,14 @@ combine () {
 
     formstart=$(( 1 + `grep -n "^form_types" $1|cut -d":" -f1` ))
     jobend=$((formstart - 2))
-    
+
     sed -n "$jobstart,${jobend}p" $1>$TMP_DIR/jobs.yml
     sed -n "$formstart,\$p" $1>$TMP_DIR/forms.yml
 
 
     jobstart=$((`grep -n "^job_types" $2|cut -d":" -f1`))
     sed -i -e  "${jobstart}r $TMP_DIR/jobs.yml" $2
-    
+
     formstart=$((`grep -n "^form_types" $2|cut -d":" -f1`))
     sed -i -e  "${formstart}r $TMP_DIR/forms.yml" $2
 }
@@ -63,12 +63,13 @@ export LOAD_PATH=$DIR
 echo ++++++
 #cat $TMP_DIR/config.yml.erb
 
-[[ "$ONDEMAND" -eq "0" ]] && { cmp --silent $TMP_DIR/config.yml.erb  $REL_FOLDER/jobs/ondemand/templates/config.yml.erb || { \
-  cp -r $DIR/template-release/jobs/ondemand $REL_FOLDER/jobs; \
-  cp $TMP_DIR/config.yml.erb $REL_FOLDER/jobs/ondemand/templates/; \
-  bosh create-release --tarball; \
-} }
+# [[ "$ONDEMAND" -eq "0" ]] && { cmp --silent $TMP_DIR/config.yml.erb  $REL_FOLDER/jobs/ondemand/templates/config.yml.erb || { \
+#   cp -r $DIR/template-release/jobs/ondemand $REL_FOLDER/jobs; \
+#   cp $TMP_DIR/config.yml.erb $REL_FOLDER/jobs/ondemand/templates/; \
+#   bosh2 create-release --tarball; \
+# } }
 #cat $TMP_DIR/template.yml.erb
+cp $TMP_DIR/template.yml.erb ~/Desktop/t.erb
 $DIR/lib/gen_metadata.rb $TMP_DIR/template.yml.erb $REL_FOLDER/`release_file` |sed -e "/^ *$/d" > build/metadata/metadata.yml
 
 mkdir -p build/releases
@@ -97,5 +98,5 @@ cp migrations/v1/* build/migrations/v1/
 cd build
 zip -r ${PRODUCT_NAME}.${PRODUCT_VERSION}.pivotal *
 cd -
-    
+
 #rm -rf $TMP_DIR

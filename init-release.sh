@@ -1,4 +1,6 @@
 #!/bin/bash -x
+
+#init-release REL_FOLDER Empty redis
 REL_FOLDER=`cd $1;pwd`
 DIR=`cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd`
 
@@ -23,13 +25,14 @@ do
     esac
 done
 
-case $OPTION in 
+case $OPTION in
     1)  cp -r $DIR/template-release/config $REL_FOLDER;;
     2)  cp -r $DIR/template-release/* $REL_FOLDER;;
     3)  exit 0;;
     *)  exit 1;;
 esac
-RELEASE_NAME=`basename $REL_FOLDER`
+RELEASE_NAME=$3
+[[ "$RELEASE_NAME" == "" ]] && RELEASE_NAME=`basename $REL_FOLDER`
 [[ "$RELEASE_NAME" == *-release ]] && RELEASE_NAME=${RELEASE_NAME::-8}
 
 sed -i "s/name: NAME/name: $RELEASE_NAME/g" $REL_FOLDER/config/final.yml
