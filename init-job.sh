@@ -42,13 +42,13 @@ init_job () {
   export -f map_template
   export -f prop
   export -f consume
-  templates=`find jobs/${jobname}/templates -depth 1 -type f|xargs -I % bash -c "map_template %"`
+  templates=`find jobs/${jobname}/templates -maxdepth 1 -mindepth 1 -type f|xargs -I % bash -c "map_template %"`
   packages=`ls -1 packages|xargs -I % echo "- %"`
-  props=`find jobs/${jobname}/templates -depth 1 -type f|xargs cat|\
+  props=`find jobs/${jobname}/templates -maxdepth 1 -mindepth 1 -type f|xargs cat|\
   sed 's/</\n</g'|sed -n 's/.*<%= *p(\(.*\)) *%>.*/\1/p'|tr -d '"' |tr -d "'" |uniq|\
   xargs -I % bash -c "prop %"`
 
-  consumes=`find jobs/${jobname}/templates -depth 1 -type f|xargs cat|\
+  consumes=`find jobs/${jobname}/templates -maxdepth 1 -mindepth 1 -type f|xargs cat|\
   sed 's/</\n</g'|sed -n 's/.*<%.*link(\(.*\)).*%>.*/\1/p'|tr -d '"' |tr -d "'" |uniq|\
   xargs -I % bash -c "consume %"`
 
@@ -78,7 +78,7 @@ EOA
 
 file=`basename $1`
 map=`echo $file|sed "s/\.erb$//"`
-processes=`find jobs/${jobname}/templates -depth 1|xargs grep "start)"|cut -d":" -f1|xargs -I % bash -c "process_def ${jobname} %"`
+processes=`find jobs/${jobname}/templates -maxdepth 1 -mindepth 1|xargs grep "start)"|cut -d":" -f1|xargs -I % bash -c "process_def ${jobname} %"`
 
 cat > $1/monit <<EOB
 $processes
@@ -95,5 +95,5 @@ export -f process_def
 cd $RELEASE_FOLDER
 #sed -n 's/.*<%= *p(\(.*\)) *%>.*/\1/p' redis.conf.erb|tr -d '"' |tr -d "'"
 #cat pp|sed 's/</\n</g'
-find jobs -depth 1 -type d -exec bash -c "init_job {}" \;
+find jobs -maxdepth 1 -mindepth 1 -type d -exec bash -c "init_job {}" \;
 cd -
